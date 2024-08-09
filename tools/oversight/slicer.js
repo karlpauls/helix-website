@@ -344,6 +344,8 @@ async function loadData(scope, chart) {
   } else if (scope === 'year') {
     dataChunks.load(await loader.fetchPrevious12Months(endDate));
   }
+
+  draw();
 }
 
 export function updateState() {
@@ -409,7 +411,7 @@ const io = new IntersectionObserver((entries) => {
     elems.incognito.addEventListener('change', async () => {
       loader.domainKey = elems.incognito.getAttribute('domainkey');
       await loadData(view, herochart);
-      draw();
+      herochart.draw();
     });
 
     herochart.render();
@@ -423,7 +425,7 @@ const io = new IntersectionObserver((entries) => {
     elems.timezoneElement.textContent = timezone;
 
     if (elems.incognito.getAttribute('domainkey')) {
-      loadData(view, herochart).then(draw);
+      loadData(view, herochart);
     }
 
     elems.filterInput.addEventListener('input', () => {
