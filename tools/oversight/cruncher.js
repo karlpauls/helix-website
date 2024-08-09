@@ -102,6 +102,37 @@ function groupFn(groupByFn) {
   };
 }
 
+function fixDomain(bundle) {
+  if (!bundle.domain) {
+    const u = new URL(bundle.url);
+    u.pathname = u.pathname.split('/')
+      .map((segment) => {
+        // only numbers and longer than 5 characters: probably an id, censor it
+        if (segment.length >= 5 && /^\d+$/.test(segment)) {
+          return '<number>';
+        }
+        // only hex characters and longer than 8 characters: probably a hash, censor it
+        if (segment.length >= 8 && /^[0-9a-f]+$/i.test(segment)) {
+          return '<hex>';
+        }
+        // base64 encoded data, censor it
+        if (segment.length > 32 && /^[a-zA-Z0-9+/]+$/.test(segment)) {
+          return '<base64>';
+        }
+        // probable UUID, censor it
+        if (segment.length > 35 && /^[0-9a-f-]+$/.test(segment)) {
+          return '<uuid>';
+        }
+        // just too long
+        if (segment.length > 40) {
+          return '...';
+        }
+        return segment;
+      }).join('/');
+    bundle.domain = u.toString();
+  }
+}
+
 /**
  * @typedef {Object} Aggregate - an object that contains aggregate metrics
  */
@@ -384,6 +415,7 @@ export class DataChunks {
   constructor() {
     this.data = [];
     this.filters = {};
+    this.bundles = [];
     this.resetData();
     this.resetSeries();
     this.resetFacets();
@@ -566,8 +598,6 @@ export class DataChunks {
     this.totalsIn = {};
     // facets[series]
     this.facetsIn = {};
-    // memoziaton
-    this.memo = {};
   }
 
   /**
@@ -576,6 +606,8 @@ export class DataChunks {
    */
   load(chunks) {
     this.data = chunks;
+    this.bundles = [].concat(...chunks.map((c) => c.rumBundles));
+    this.bundles.forEach(fixDomain);
     this.resetData();
   }
 
@@ -585,19 +617,9 @@ export class DataChunks {
    */
   addData(chunks) {
     this.data.push(...chunks);
+    this.bundles = this.bundles.concat(...chunks.map((c) => c.rumBundles));
+    this.bundles.forEach(fixDomain);
     this.resetData();
-  }
-
-  /**
-   * @returns {Bundle[]} all bundles, regardless of the chunk they belong to
-   */
-  get bundles() {
-    if (this.memo.bundles) return this.memo.bundles;
-    this.memo.bundles = this.data.reduce((acc, chunk) => {
-      acc.push(...chunk.rumBundles);
-      return acc;
-    }, []);
-    return this.memo.bundles;
   }
 
   /**
