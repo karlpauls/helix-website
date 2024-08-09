@@ -76,6 +76,7 @@ export default class SkylineChart extends AbstractChart {
   }
 
   render() {
+    if (this.chart) this.chart.destroy();
     // eslint-disable-next-line no-undef
     this.chart = new Chart(this.elems.canvas, {
       type: 'bar',

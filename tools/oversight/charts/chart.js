@@ -3,7 +3,6 @@ export default class AbstractChart {
     this.chartConfig = {};
     this.dataChunks = dataChunks;
     this.elems = elems;
-    this.chart = {};
   }
 
   set config(config) {
