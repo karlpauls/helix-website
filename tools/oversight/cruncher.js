@@ -858,6 +858,9 @@ export class DataChunks {
           aggregateFn(valueFn),
           new Aggregate(),
         );
+        // we need to clone the aggregate object, so that we can use it as its own parent
+        // this is necessary for calculating the share and percentage metrics
+        // the alternative would be to calculate the totals for each group twice (which is slower)
         acc[seriesName] = Object.assign(Object.create(Object.getPrototypeOf(parent)), parent);
         acc[seriesName].parentProvider = () => parent;
         return acc;
