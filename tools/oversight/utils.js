@@ -29,6 +29,7 @@ export function scoreCWV(value, name) {
   if (value === undefined || value === null) return null;
   let poor;
   let ni;
+  // this is unrolled on purpose as this method becomes a bottleneck
   if (name === 'lcp') {
     poor = 4000;
     ni = 2500;
